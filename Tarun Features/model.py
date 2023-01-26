@@ -5,10 +5,10 @@ from torch.optim import Adam
 from torchvision import transforms,datasets
 from glob import glob
 import pickle
-import platform
-from art.attacks.evasion import FastGradientMethod
-from art.estimators.classification import PyTorchClassifier
-import numpy as np
+from PIL import Image
+import cv2
+import warnings
+warnings.filterwarnings("ignore")
 
 #glob module can be used for file name matching
 
@@ -82,31 +82,16 @@ class HWRModel:
         self.optimizer = Adam(self.model.parameters(), lr=0.001)
         self.loss_func = nn.CrossEntropyLoss()
         self.dest_file = 'best_checkpoint_server.model'
-        self.batch_size = 20
-        self.local_data_percentage = 70
+        self.batch_size = 1
+        self.local_data_percentage = 100
         self.device = torch.device('mps')
-        self.classifier = PyTorchClassifier(
-            model = self.model,
-            loss = self.loss_func,
-            optimizer = self.optimizer,
-            input_shape=(3,150,150),
-            nb_classes=2,
-            channels_first=False
-        )
 
-    def user_instance(self,user_id,batch_size,local_data_percentage):
-        self.user_id = user_id
-        self.dest_file = 'best_checkpoint_{}.model'.format(user_id)
-        self.batch_size = batch_size
-        self.local_data_percentage = local_data_percentage
 
-    def initialise_parameters(self,result):
-        self.model.initialise_parameters(result)
     
-    def preprocess(self,resize=150):
+    def preprocess(self):
         transformer = transforms.Compose(
             [
-                transforms.Resize(resize),
+                transforms.Resize(150),
                 transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
                 transforms.Normalize([0.5,0.5,0.5],[0.5,0.5,0.5])
@@ -123,7 +108,7 @@ class HWRModel:
         local_dataset,rem_dataset = random_split(img_dataset,(shared_data_count,total_data_count-shared_data_count))
 
         print("{}/{} images taken".format(shared_data_count,total_data_count))
-        return img_dataset
+        return local_dataset
 
 
     def load_train_dataset(self):
@@ -131,27 +116,54 @@ class HWRModel:
         train_loader = DataLoader(self.get_dataset(self.train_path),
     batch_size=self.batch_size, shuffle=True)
 
-        return self.get_dataset(self.train_path)
+        return train_loader
 
     def load_test_dataset(self):
 
         test_loader = DataLoader(self.get_dataset(self.test_path),
     batch_size=self.batch_size, shuffle=True)
 
-        return self.get_dataset(self.test_path)
+        return test_loader
 
 
         
     def train(self,num_epochs=10):
         self.model.to(self.device)
         best_accuracy = 0.0
-        train_dataset = self.load_train_dataset()
+        train_loader = self.load_train_dataset()
         train_count=len(glob(self.train_path+'/**/*.png'))
-
-        classifier.fit()
-
-
         
+
+        self.model.train()
+        for epoch in range(num_epochs):
+            #Model will be in training mode and takes place on training dataset
+            train_loss = 0.0
+            train_accuracy = 0.0
+            c = 0
+            for images,labels in train_loader:
+                self.optimizer.zero_grad()
+                images = images.to(self.device)
+                labels = labels.to(self.device)
+                outputs = self.model(images) 
+                c += 1
+                if c==1: print("Inside model = ",outputs.shape,images.shape,type(outputs),type(images),outputs,labels)
+                loss = self.loss_func(outputs,labels)
+                loss.backward() # backpropagation
+                self.optimizer.step() # Updates the weights
+
+                train_loss += loss.data*self.batch_size
+                _,predictions = torch.max(outputs.data,1)
+                train_accuracy+=int(torch.sum(predictions==labels.data))
+            train_accuracy /= train_count
+            train_loss /= train_count
+            print('Epoch: '+str(epoch)+' Train Loss: '+str(train_loss)+' Train Accuracy: '+str(train_accuracy))
+
+
+            if train_accuracy>best_accuracy:
+                
+                torch.save(self.model,self.dest_file)
+                best_accuracy=train_accuracy
+        self.model = torch.load(self.dest_file)
         return best_accuracy
 
     def test(self):
@@ -168,6 +180,19 @@ class HWRModel:
             test_accuracy += int(torch.sum(predictions==labels.data))
         test_accuracy /= test_count
         print("Test accuracy =  ",str(test_accuracy))
+
+    def predict(self,filename):
+        self.model.to(torch.device('cpu'))
+        transformer = self.preprocess()
+        image=Image.open(filename).convert('RGB')
+        image_tensor=transformer(image)
+        image_tensor=image_tensor.unsqueeze_(0)
+        output=self.model(image_tensor)
+        print("Prediction = ",image_tensor.shape) #torch.Size([1, 3, 150, 150])
+        index = output.data.numpy().argmax()
+        print('index = ',index)
+        return output
+
 
     def get_best_parameters(self):
         loaded_model = torch.load(self.dest_file)
@@ -190,39 +215,18 @@ if __name__ == '__main__':
 
     data_path = '/Users/tarunvisvar/Downloads/Dataset/Handwriting/Handwriting-subset'
     batch_size = 64
-    local_data_percentage = 40
+    local_data_percentage = 100
     parameter_list = [] # For testing aggregator function developed by Shasaank
     for i in range(5):
         mymodel = HWRModel(data_path)
         #mymodel.user_instance(i,batch_size,local_data_percentage)
-        train_dataset = datasets.ImageFolder(mymodel.train_path,transform = mymodel.preprocess())
-        test_dataset = datasets.ImageFolder(mymodel.test_path,transform = mymodel.preprocess())
-        #classifier = mymodel.classifier
-        #classifier.fit(img_dataset)
-        train_count,test_count = len(train_dataset),len(test_dataset)
-        #train_count,test_count = 5,5
-        test_loader = DataLoader(test_dataset,batch_size=test_count)
-        train_loader = DataLoader(train_dataset,batch_size=train_count)
-        x_train,y_train = next(iter(train_loader))
-        x_test,y_test = next(iter(test_loader))
-        print(type(x_train))
-        mymodel.classifier.fit(x_train,y_train,nb_epochs=5)
-  
-        print("--Training complete--")
-        predictions = mymodel.classifier.predict(x_test)
-
-        print("Prediction : ",np.argmax(predictions, axis=1))
-        print("Prediction : ",np.argmax(predictions, axis=1))
-        accuracy = np.sum(np.argmax(predictions, axis=1) == np.argmax(y_test)) / len(y_test)
-        print("Accuracy on benign test examples: {}%".format(accuracy * 100))
-
-
-        '''mymodel.train(num_epochs = 5)
+        mymodel.train(num_epochs = 1)
         mymodel.test()
+        print(mymodel.predict('/Users/tarunvisvar/Downloads/Dataset/Handwriting/Handwriting-subset/Test/Normal/A-56.png'))
         parameters = mymodel.get_best_parameters()
-        for name,params in mymodel.model.named_parameters():
-            print(name,params.shape)
-        parameter_list.append(parameters)'''
+        #for name,params in mymodel.model.named_parameters():
+        #    print(name,params.shape)
+        parameter_list.append(parameters)
         break
     with open('parameter_list.bin','wb') as f:
         pickle.dump(parameter_list,f)
