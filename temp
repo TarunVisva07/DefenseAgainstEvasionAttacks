@@ -1,5 +1,0 @@
-from art.utils import load_mnist
-import numpy as np
-(x_train, y_train), (x_test, y_test), min_pixel_value, max_pixel_value = load_mnist()
-x_train = np.transpose(x_train,(0,3,1,2))
-print(x_train.shape)
