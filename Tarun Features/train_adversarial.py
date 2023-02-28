@@ -1,5 +1,5 @@
-from exclusive_adversarial_defense.simpleCNN import SimpleCNN
-from exclusive_adversarial_defense.datagen import generate_adversarial_batch
+from adversarial_defense.simpleCNN import SimpleCNN
+from adversarial_defense.datagen import generate_adversarial_batch
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
