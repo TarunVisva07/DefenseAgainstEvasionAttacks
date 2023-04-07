@@ -41,7 +41,7 @@ model.fit(trainX, trainY,
 print("[INFO] loss: {:.4f}, acc: {:.4f}".format(loss, acc))
 
 # loop over a sample of our testing images
-for i in np.random.choice(np.arange(0, len(testX)), size=(10,)):
+for i in np.random.choice(np.arange(0, len(testX)), size=(1,)):
 	# grab the current image and label
 	image = testX[i]
 	label = testY[i]
@@ -67,3 +67,26 @@ for i in np.random.choice(np.arange(0, len(testX)), size=(10,)):
 	# resize the images so we can better visualize them
 	image = cv2.resize(image, (96, 96))
 	adversary = cv2.resize(adversary, (96, 96))
+
+	# determine the predicted label for both the original image and
+	# adversarial image
+	imagePred = label.argmax()
+	adversaryPred = pred[0].argmax()
+	color = (0, 255, 0)
+
+	# if the image prediction does not match the adversarial
+	# prediction then update the color
+	if imagePred != adversaryPred:
+		color = (0, 0, 255)
+
+	# draw the predictions on the respective output images
+	cv2.putText(image, str(imagePred), (2, 25),
+				cv2.FONT_HERSHEY_SIMPLEX, 0.95, (0, 255, 0), 2)
+	cv2.putText(adversary, str(adversaryPred), (2, 25),
+				cv2.FONT_HERSHEY_SIMPLEX, 0.95, color, 2)
+
+	# stack the two images horizontally and then show the original
+	# image and adversarial image
+	output = np.hstack([image, adversary])
+	cv2.imshow("FGSM Adversarial Images", output)
+	cv2.waitKey(0)
