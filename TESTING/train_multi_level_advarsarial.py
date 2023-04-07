@@ -33,8 +33,8 @@ model.fit(trainX, trainY,
 print("Normal testing images:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 # generate a set of adversarial from our test set
-for i in range(-5, 0):
-    eps = 10 ** i
+for i in range(1, 11):
+    eps = 0.01 * i
     print("Generating adversarial examples with FGSM...\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))
@@ -54,8 +54,8 @@ for i in range(-5, 0):
         epochs=10,
         verbose=1)
 
-for i in range(-1, -6, -1):
-    eps = 10 ** i
+for i in range(10, 0, -1):
+    eps = 0.01 * i
     print("Generating adversarial examples with FGSM...\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))

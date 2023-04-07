@@ -16,8 +16,8 @@ testX = np.expand_dims(testX, axis=-1)
 trainY = to_categorical(trainY, 10)
 testY = to_categorical(testY, 10)
 
-for i in range(-5, 0):
-	print("\n\nFor epsilon =", 10**i)
+for i in range(1, 11):
+	print("\n\nFor epsilon =", 0.01*i)
 	print("compiling model...")
 	opt = Adam(lr=1e-3)
 	model = SimpleCNN.build(width=28, height=28, depth=1, classes=10)
@@ -37,12 +37,12 @@ for i in range(-5, 0):
 
 
 	# generate a set of adversarial from our test set
-	print("Generating adversarial examples with FGSM  (eps =", (10**i), ")...\n")
+	print("Generating adversarial examples with FGSM  (eps =", (0.01*i), ")...\n")
 	(advX, advY) = next(generate_adversarial_batch(model, len(testX),
-		testX, testY, (28, 28, 1), eps=(10**i)))
+		testX, testY, (28, 28, 1), eps=(0.01*i)))
 	# re-evaluate the model on the adversarial images
 	(loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
-	print("Adversarial testing images  (eps =", (10**i), "):")
+	print("Adversarial testing images  (eps =", (0.01*i), "):")
 	print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 
 
@@ -51,7 +51,7 @@ for i in range(-5, 0):
 	model.compile(loss="categorical_crossentropy", optimizer=opt,
 		metrics=["accuracy"])
 	# fine-tune our CNN on the adversarial images
-	print("Fine-tuning network on adversarial examples  (eps =", (10**i), ")...")
+	print("Fine-tuning network on adversarial examples  (eps =", (0.01*i), ")...")
 	model.fit(advX, advY,
 		batch_size=64,
 		epochs=10,
@@ -63,9 +63,9 @@ for i in range(-5, 0):
 	print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 
 	for j in range(i-3, i+3):
-		print("Generating adversarial test samples with FGSM  (eps =", (10 ** j), ")...\n")
+		print("Generating adversarial test samples with FGSM  (eps =", (0.01*j), ")...\n")
 		(advX, advY) = next(generate_adversarial_batch(model, len(testX),
-													   testX, testY, (28, 28, 1), eps=(10 ** j)))
+													   testX, testY, (28, 28, 1), eps=(0.01*j)))
 		# do a final evaluation of the model on the adversarial images
 		(loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
 		print("Adversarial images after fine-tuning:")

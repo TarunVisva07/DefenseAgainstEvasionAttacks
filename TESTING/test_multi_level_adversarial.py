@@ -33,9 +33,9 @@ model.fit(trainX, trainY,
 print("Normal testing images:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 # generate a set of adversarial from our test set
-for i in range(-5, 0):
-    eps = 10 ** i
-    print("Generating adversarial examples with FGSM...\n")
+for i in range(1, 11):
+    eps = 0.01 * i
+    print("Generating adversarial examples with FGSM...(", eps, ")\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))
     # re-evaluate the model on the adversarial images
@@ -54,8 +54,8 @@ for i in range(-5, 0):
         epochs=10,
         verbose=1)
 
-for i in range(-1, -6, -1):
-    eps = 10 ** i
+for i in range(10, 0, -1):
+    eps = 0.01 * i
     print("Generating adversarial examples with FGSM...\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))
@@ -81,12 +81,12 @@ print("Normal testing images after fine-tuning:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 
 # do a final evaluation of the model on the adversarial images
-for i in range(-5, 0):
-    print("Generating adversarial examples with FGSM (eps =", (10**i), ")...\n")
+for i in range(1, 30):
+    print("Generating adversarial examples with FGSM (eps =", (0.01 * i), ")...\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
-        testX, testY, (28, 28, 1), eps=(10 ** i)))
+        testX, testY, (28, 28, 1), eps=(0.01 * i)))
     # re-evaluate the model on the adversarial images
 
     (loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
-    print("Adversarial testing images (eps =", (10**i), "):")
+    print("Adversarial testing images (eps =", (0.01 * i), "):")
     print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
