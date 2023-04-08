@@ -1,5 +1,6 @@
 from adversarial_defense.simpleCNN import SimpleCNN
 from adversarial_defense.datagen import generate_adversarial_batch
+import matplotlib.pyplot as plt
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
@@ -33,14 +34,25 @@ model.fit(trainX, trainY,
 print("Normal testing images:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 # generate a set of adversarial from our test set
-
-for i in range(-5, 0):
+xpoints = []
+ypoints = []
+for i in range(1, 11):
+    eps = 0.01 * i
     print("Generating adversarial examples with FGSM (eps =", (10**i), ")...\n")
     (advX, advY) = next(generate_adversarial_batch(model, len(testX),
-        testX, testY, (28, 28, 1), eps=(10 ** i)))
+        testX, testY, (28, 28, 1), eps=eps))
     # re-evaluate the model on the adversarial images
 
     (loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
-    print("Adversarial testing images (eps =", (10**i), "):")
+    print("Adversarial testing images (eps =", eps, "):")
+    xpoints.append(eps)
     print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
+    ypoints.append(acc)
+xpoints = np.array(xpoints)
+ypoints = np.array(ypoints)
+plt.plot(xpoints,ypoints)
+plt.show()
+plt.savefig('test_base_model_graph.png')
+
+
 
