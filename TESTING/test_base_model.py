@@ -48,7 +48,7 @@ for i in range(1, 11):
     xpoints.append(eps)
     print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
     ypoints.append(acc)
-print(zip(xpoints,ypoints))
+print(list(zip(xpoints,ypoints)))
 xpoints = np.array(xpoints)
 ypoints = np.array(ypoints)
 plt.plot(xpoints,ypoints)

@@ -80,7 +80,7 @@ for i in range(1,11,2):
 		ypoints.append(acc)
 		print("Adversarial images after fine-tuning:")
 		print("Loss: {:.4f}, Acc: {:.4f}".format(loss, acc))
-	result[eps] = zip(xpoints,ypoints)
+	result[eps] = list(zip(xpoints,ypoints))
 	xpoints = np.array(xpoints)
 	ypoints = np.array(ypoints)
 	plt.plot(xpoints,ypoints,label = eps)

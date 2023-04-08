@@ -97,6 +97,6 @@ for i in range(1, 15, 2):
     print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
     xpoints.append(eps)
     ypoints.append(acc)
-print(zip(xpoints,ypoints))
+print(list(zip(xpoints,ypoints)))
 plt.plot(np.array(xpoints),np.array(ypoints))
 plt.show()
