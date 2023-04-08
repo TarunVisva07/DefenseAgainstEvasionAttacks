@@ -3,7 +3,9 @@ from adversarial_defense.datagen import generate_adversarial_batch
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
+import matplotlib.pyplot as plt
 import numpy as np
+import copy
 
 print("loading MNIST dataset...")
 (trainX, trainY), (testX, testY) = mnist.load_data()
@@ -21,7 +23,8 @@ opt = Adam(lr=1e-3)
 model = SimpleCNN.build(width=28, height=28, depth=1, classes=10)
 model.compile(loss="categorical_crossentropy", optimizer=opt,
 	metrics=["accuracy"])
-# train the simple CNN on MNIST
+
+# train the simpleCNN on mnist
 print("training network...")
 model.fit(trainX, trainY,
 	validation_data=(testX, testY),
@@ -33,10 +36,11 @@ model.fit(trainX, trainY,
 print("Normal testing images:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 # generate a set of adversarial from our test set
+simple_model = copy.deepcopy(model)
 for i in range(1, 11):
     eps = 0.01 * i
     print("Generating adversarial examples with FGSM...(", eps, ")\n")
-    (advX, advY) = next(generate_adversarial_batch(model, len(testX),
+    (advX, advY) = next(generate_adversarial_batch(simple_model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))
     # re-evaluate the model on the adversarial images
     (loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
@@ -47,7 +51,6 @@ for i in range(1, 11):
     opt = Adam(lr=1e-4)
     model.compile(loss="categorical_crossentropy", optimizer=opt,
         metrics=["accuracy"])
-    # fine-tune our CNN on the adversarial images
     print("Fine-tuning network on adversarial examples...")
     model.fit(advX, advY,
         batch_size=64,
@@ -57,7 +60,7 @@ for i in range(1, 11):
 for i in range(10, 0, -1):
     eps = 0.01 * i
     print("Generating adversarial examples with FGSM...\n")
-    (advX, advY) = next(generate_adversarial_batch(model, len(testX),
+    (advX, advY) = next(generate_adversarial_batch(simple_model, len(testX),
         testX, testY, (28, 28, 1), eps=eps))
     # re-evaluate the model on the adversarial images
     (loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
@@ -81,12 +84,19 @@ print("Normal testing images after fine-tuning:")
 print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
 
 # do a final evaluation of the model on the adversarial images
-for i in range(1, 30):
-    print("Generating adversarial examples with FGSM (eps =", (0.01 * i), ")...\n")
-    (advX, advY) = next(generate_adversarial_batch(model, len(testX),
-        testX, testY, (28, 28, 1), eps=(0.01 * i)))
+xpoints = []
+ypoints = []
+for i in range(1, 15, 2):
+    eps = 0.01 * i
+    print("Generating adversarial examples with FGSM (eps =", (eps), ")...\n")
+    (advX, advY) = next(generate_adversarial_batch(simple_model, len(testX),
+        testX, testY, (28, 28, 1), eps=(eps)))
     # re-evaluate the model on the adversarial images
-
     (loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
-    print("Adversarial testing images (eps =", (0.01 * i), "):")
+    print("Adversarial testing images (eps =", (eps), "):")
     print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
+    xpoints.append(eps)
+    ypoints.append(acc)
+print(zip(xpoints,ypoints))
+plt.plot(np.array(xpoints),np.array(ypoints))
+plt.show()

@@ -6,6 +6,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.datasets import mnist
 import numpy as np
 import matplotlib.pyplot as plt
+import copy
 # load MNIST dataset and scale the pixel values to the range [0, 1]
 print("Loading MNIST dataset...")
 (trainX, trainY), (testX, testY) = mnist.load_data()
@@ -18,6 +19,7 @@ testX = np.expand_dims(testX, axis=-1)
 trainY = to_categorical(trainY, 10)
 testY = to_categorical(testY, 10)
 
+result = dict()
 for i in range(1, 11,2):
 	eps = 0.01 * i
 	print("\n\nFor epsilon =", eps)
@@ -40,7 +42,7 @@ for i in range(1, 11,2):
 	# generate a set of adversarial from our test set (so we can evaluate
 	# our model performance before and after mixed adversarial
 	# training)
-
+	simple_model = copy.deepcopy(model)
 	print("Generating adversarial examples with FGSM  (eps =", (eps), ")...\n")
 	(advX, advY) = next(generate_adversarial_batch(model, len(testX),
 		testX, testY, (28, 28, 1), eps=(eps)))
@@ -76,12 +78,14 @@ for i in range(1, 11,2):
 	for j in range(0,15,2):
 		eps_2 = 0.01 * j
 		print("Generating adversarial examples with FGSM (eps =", (eps_2), ")...\n")
-		(advX, advY) = next(generate_adversarial_batch(model, len(testX), testX, testY, (28, 28, 1), eps=(eps_2)))
+		(advX, advY) = next(generate_adversarial_batch(simple_model, len(testX), testX, testY, (28, 28, 1), eps=(eps_2)))
+		(loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
 		xpoints.append(eps_2)
 		ypoints.append(acc)
-		(loss, acc) = model.evaluate(x=advX, y=advY, verbose=0)
 		print("Adversarial images after fine-tuning:")
 		print("Loss: {:.4f}, Acc: {:.4f}".format(loss, acc))
+	result[eps] = zip(xpoints,ypoints)
 	plt.plot(np.array(xpoints),np.array(ypoints),label=eps)
+plt.legend()
 plt.show()
-plt.savefig('train_mixed_adversarial_graph.png')
+print(result)
