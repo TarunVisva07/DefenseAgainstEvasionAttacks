@@ -84,6 +84,8 @@ for i in range(1,11,2):
 	xpoints = np.array(xpoints)
 	ypoints = np.array(ypoints)
 	plt.plot(xpoints,ypoints,label = eps)
+plt.xlabel("test epsilon (amount of noise)")
+plt.ylabel("Test Accuarcy")
 plt.legend()
 plt.show()
 print(result)

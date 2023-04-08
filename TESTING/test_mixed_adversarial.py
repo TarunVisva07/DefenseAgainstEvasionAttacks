@@ -86,6 +86,8 @@ for i in range(1, 11,2):
 		print("Loss: {:.4f}, Acc: {:.4f}".format(loss, acc))
 	result[eps] = list(zip(xpoints,ypoints))
 	plt.plot(np.array(xpoints),np.array(ypoints),label=eps)
+plt.xlabel("test epsilon (amount of noise)")
+plt.ylabel("Test Accuarcy")
 plt.legend()
 plt.show()
 print(result)

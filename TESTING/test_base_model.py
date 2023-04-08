@@ -51,6 +51,8 @@ for i in range(1, 11):
 print(list(zip(xpoints,ypoints)))
 xpoints = np.array(xpoints)
 ypoints = np.array(ypoints)
+plt.xlabel("epsilon (amount of noise)")
+plt.ylabel("Test Accuarcy")
 plt.plot(xpoints,ypoints)
 plt.show()
 
