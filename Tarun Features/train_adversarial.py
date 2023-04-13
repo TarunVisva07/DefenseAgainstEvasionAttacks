@@ -12,6 +12,7 @@ testX = testX / 255.0
 # add a channel dimension to the images
 trainX = np.expand_dims(trainX, axis=-1)
 testX = np.expand_dims(testX, axis=-1)
+#change
 # one-hot encode our labels
 trainY = to_categorical(trainY, 10)
 testY = to_categorical(testY, 10)
