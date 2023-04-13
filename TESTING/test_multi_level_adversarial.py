@@ -98,10 +98,7 @@ for i in range(1, 15, 2):
     xpoints.append(eps)
     ypoints.append(acc)
 print(list(zip(xpoints,ypoints)))
-<<<<<<< HEAD
-=======
 plt.xlabel("epsilon (amount of noise)")
 plt.ylabel("Test Accuarcy")
->>>>>>> 8ecd338 (Minor bug fix)
 plt.plot(np.array(xpoints),np.array(ypoints))
 plt.show()

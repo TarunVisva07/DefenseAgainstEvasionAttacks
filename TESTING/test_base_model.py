@@ -32,7 +32,7 @@ model.fit(trainX, trainY,
 
 (loss, acc) = model.evaluate(x=testX, y=testY, verbose=0)
 print("Normal testing images:")
-print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))
+print("Loss: {:.4f}, Acc: {:.4f}\n".format(loss, acc))  
 # generate a set of adversarial from our test set
 xpoints = []
 ypoints = []
