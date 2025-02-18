@@ -1,4 +1,4 @@
-# DefenseAgainstEvasionAttacks
+# Defense Against Evasion Attacks
 
 The massive advancements in the field of machine learning have enabled it to be used in vital technologies such as self-driving cars, phishing page detection and anomaly detection. Machine learning classifiers used for these applications are required to be fast and precise as any faults in the predictions may be hazardous or may lead to leakage of sensitive information. However, in recent times, machine learning models deployed on the client-side, have been vulnerable to evasion attacks. An evasion attack happens when a model, during the testing phase, is fed with a carefully perturbed input that looks and feels exactly the same as its untampered copy to a human, but such adversarial examples usually completely throw off the classifier from working as intended.
 
